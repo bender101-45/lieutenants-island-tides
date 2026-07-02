@@ -4,8 +4,8 @@
   "description": "Daily road flooding windows for Lieutenants Island, South Wellfleet MA",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0077b6",
-  "theme_color": "#0077b6",
+  "background_color": "#0f2e38",
+  "theme_color": "#0f2e38",
   "icons": [
     {
       "src": "/icon-192.png",

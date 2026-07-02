@@ -73,11 +73,16 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>🌊 Lieutenants Island Road</h1>
-        <p className="subtitle">
-          South Wellfleet, MA &mdash; road floods above{" "}
-          <strong>{FLOOD_THRESHOLD_FT} ft</strong> (MLLW, Wellfleet Harbor)
-        </p>
+        <div className="header-inner">
+          <WaveMark />
+          <h1>Lieutenants Island</h1>
+          <p className="eyebrow">Road Flooding Forecast</p>
+          <p className="subtitle">
+            South Wellfleet, Massachusetts. The causeway floods when the tide
+            reaches <strong>{FLOOD_THRESHOLD_FT} ft</strong> above MLLW at
+            Wellfleet Harbor.
+          </p>
+        </div>
       </header>
 
       <main className="app-main">
@@ -108,10 +113,11 @@ export default function App() {
 
             <div className="export-section">
               <button className="export-btn" onClick={downloadCalendar}>
-                📅 Export to Apple Calendar (30 days)
+                Add to Apple Calendar
               </button>
               <p className="export-hint">
-                Includes closure alerts + nightly 8 PM preview of next day
+                Downloads the next 30 days of closures, with a reminder one hour
+                before each, plus a nightly 8&nbsp;PM preview of the next day.
               </p>
             </div>
           </>
@@ -120,45 +126,79 @@ export default function App() {
 
       <footer className="app-footer">
         <p>
-          Tide data: NOAA station 8446613 (Wellfleet Harbor) &middot;{" "}
+          Predictions from NOAA CO-OPS, station 8446613 (Wellfleet Harbor).{" "}
           <a
             href="https://tidesandcurrents.noaa.gov/stationhome.html?id=8446613"
             target="_blank"
             rel="noopener noreferrer"
           >
-            NOAA
+            Source
           </a>
+        </p>
+        <p className="footer-note">
+          A reconstructed forecast &mdash; verify conditions before crossing.
         </p>
       </footer>
     </div>
   );
 }
 
+function WaveMark() {
+  return (
+    <svg
+      className="wave-mark"
+      viewBox="0 0 48 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M2 16 q 6 -10 11.5 0 t 11.5 0 t 11.5 0 t 9.5 0"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M2 10 q 6 -8 11.5 0 t 11.5 0 t 11.5 0 t 9.5 0"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        opacity="0.5"
+      />
+    </svg>
+  );
+}
+
 function DayCard({ date, windows, isToday }) {
+  const closed = windows.length > 0;
   return (
     <div className={`day-card${isToday ? " today" : ""}`}>
       <div className="day-header">
-        <span className="day-label">
-          {isToday ? "Today" : formatShortDate(date)}
+        <div className="day-heading">
+          {isToday && <span className="today-pill">Today</span>}
+          <span className="day-label">
+            {isToday ? formatDate(date) : formatShortDate(date)}
+          </span>
+        </div>
+        <span className={`day-status ${closed ? "is-closed" : "is-open"}`}>
+          {closed
+            ? `${windows.length} closure${windows.length > 1 ? "s" : ""}`
+            : "Open"}
         </span>
-        {isToday && <span className="day-full-date">{formatDate(date)}</span>}
       </div>
 
-      {windows.length === 0 ? (
+      {!closed ? (
         <div className="no-closure">No road flooding expected</div>
       ) : (
         <ul className="windows-list">
           {windows.map((w, i) => (
             <li key={i} className="window-item">
-              <span className="window-icon">🚧</span>
-              <span className="window-text">
-                Road covered{" "}
-                <strong>
-                  {formatTime(w.start)} &ndash; {formatTime(w.end)}
-                </strong>{" "}
-                <span className="window-duration">
-                  ({formatDuration(w.start, w.end)})
-                </span>
+              <span className="window-times">
+                {formatTime(w.start)}
+                <span className="window-dash">&ndash;</span>
+                {formatTime(w.end)}
+              </span>
+              <span className="window-duration">
+                {formatDuration(w.start, w.end)}
               </span>
             </li>
           ))}
