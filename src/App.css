@@ -1,0 +1,222 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --ocean: #0077b6;
+  --ocean-dark: #005f99;
+  --sand: #f8f4ee;
+  --text: #1a1a1a;
+  --text-muted: #666;
+  --flood-bg: #fff3cd;
+  --flood-border: #e0a800;
+  --today-border: #0077b6;
+  --radius: 12px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--sand);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 0 2rem;
+}
+
+/* ── Header ── */
+.app-header {
+  background: var(--ocean);
+  color: white;
+  padding: 1.5rem 1.25rem 1.25rem;
+  text-align: center;
+}
+
+.app-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+/* ── Main ── */
+.app-main {
+  padding: 1rem 1rem 0;
+}
+
+/* ── Status ── */
+.status-msg {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.status-msg.error {
+  color: #c0392b;
+  background: #fdf0ef;
+  border-radius: var(--radius);
+  border: 1px solid #e8b4b0;
+}
+
+/* ── Days ── */
+.days {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.day-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  box-shadow: var(--shadow);
+  border-left: 4px solid transparent;
+}
+
+.day-card.today {
+  border-left-color: var(--today-border);
+  background: #f0f7ff;
+}
+
+.day-header {
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.day-label {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.today .day-label {
+  color: var(--ocean);
+}
+
+.day-full-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ── No closure ── */
+.no-closure {
+  font-size: 0.875rem;
+  color: #2e7d32;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.no-closure::before {
+  content: "✓";
+  font-weight: 700;
+}
+
+/* ── Windows ── */
+.windows-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.window-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: var(--flood-bg);
+  border: 1px solid var(--flood-border);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+}
+
+.window-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.window-text {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.window-duration {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* ── Export ── */
+.export-section {
+  margin-top: 1.25rem;
+  text-align: center;
+}
+
+.export-btn {
+  background: var(--ocean);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.85rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  letter-spacing: 0.01em;
+  transition: background 0.15s;
+}
+
+.export-btn:hover,
+.export-btn:active {
+  background: var(--ocean-dark);
+}
+
+.export-hint {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* ── Footer ── */
+.app-footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 0 1rem;
+}
+
+.app-footer a {
+  color: var(--ocean);
+  text-decoration: none;
+}
+
+/* ── Desktop ── */
+@media (min-width: 540px) {
+  .app {
+    padding-top: 1.5rem;
+  }
+
+  .app-header {
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  .app-main {
+    padding: 1.25rem 1.25rem 0;
+  }
+}
