@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0096d6"/>
+      <stop offset="1" stop-color="#0077b6"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#sky)"/>
+  <!-- waves -->
+  <path d="M0 340 q 64 -44 128 0 t 128 0 t 128 0 t 128 0 V512 H0 Z" fill="#ffffff" opacity="0.28"/>
+  <path d="M0 380 q 64 -44 128 0 t 128 0 t 128 0 t 128 0 V512 H0 Z" fill="#ffffff" opacity="0.45"/>
+  <path d="M0 420 q 64 -44 128 0 t 128 0 t 128 0 t 128 0 V512 H0 Z" fill="#ffffff" opacity="0.7"/>
+  <!-- wave emoji-like crest at top -->
+  <text x="256" y="250" font-size="200" text-anchor="middle" dominant-baseline="middle">🌊</text>
+</svg>
