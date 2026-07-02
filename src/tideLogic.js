@@ -125,7 +125,13 @@ export function computeDailyClosures(extremes, startDate, numDays) {
 
     const samples = sampleDay(extremes, dayStart, dayEnd);
     const windows = findClosureWindows(samples);
-    results.push({ date: new Date(dayStart), windows });
+
+    // High/low extremes that fall within this calendar day
+    const dayExtremes = extremes.filter(
+      (e) => e.t >= dayStart && e.t <= dayEnd
+    );
+
+    results.push({ date: new Date(dayStart), windows, extremes: dayExtremes });
   }
   return results;
 }

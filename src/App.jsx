@@ -101,11 +101,12 @@ export default function App() {
         {displayClosures && (
           <>
             <div className="days">
-              {displayClosures.map(({ date, windows }, i) => (
+              {displayClosures.map(({ date, windows, extremes }, i) => (
                 <DayCard
                   key={date.toISOString()}
                   date={date}
                   windows={windows}
+                  extremes={extremes}
                   isToday={i === 0}
                 />
               ))}
@@ -168,7 +169,7 @@ function WaveMark() {
   );
 }
 
-function DayCard({ date, windows, isToday }) {
+function DayCard({ date, windows, extremes, isToday }) {
   const closed = windows.length > 0;
   return (
     <div className={`day-card${isToday ? " today" : ""}`}>
@@ -203,6 +204,20 @@ function DayCard({ date, windows, isToday }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {extremes && extremes.length > 0 && (
+        <div className="tides">
+          {extremes.map((e, i) => (
+            <div key={i} className="tide">
+              <span className="tide-type">
+                {e.type === "H" ? "High" : "Low"}
+              </span>
+              <span className="tide-time">{formatTime(e.t)}</span>
+              <span className="tide-height">{e.v.toFixed(1)} ft</span>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

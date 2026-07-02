@@ -220,6 +220,44 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Tides (high/low table) ── */
+.tides {
+  margin-top: 0.85rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed var(--line);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem 1.25rem;
+}
+
+.tide {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.tide-type {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.65rem;
+  color: var(--accent);
+  width: 2.4rem;
+  flex-shrink: 0;
+}
+
+.tide-time {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.tide-height {
+  margin-left: auto;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Export ── */
 .export-section {
   margin-top: 1.5rem;
