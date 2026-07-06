@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import {
   FLOOD_THRESHOLD_FT,
   fetchTidePredictions,
@@ -140,6 +141,8 @@ export default function App() {
           A reconstructed forecast &mdash; verify conditions before crossing.
         </p>
       </footer>
+
+      <Analytics />
     </div>
   );
 }
