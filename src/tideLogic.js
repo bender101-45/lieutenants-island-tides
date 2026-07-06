@@ -1,5 +1,5 @@
 // ─── Constants ───────────────────────────────────────────────────────────────
-export const FLOOD_THRESHOLD_FT = 9.8;
+export const FLOOD_THRESHOLD_FT = 9.6;
 const STATION_ID = "8446613";
 const SAMPLE_INTERVAL_MIN = 2;
 
