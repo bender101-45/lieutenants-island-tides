@@ -88,9 +88,9 @@ export default function App() {
           <p className="eyebrow">Road Flooding Forecast</p>
           <p className="subtitle">
             South Wellfleet, Massachusetts. Road flooding is estimated using a
-            tide height of <strong>{FLOOD_THRESHOLD_FT} feet</strong>. Storms and
-            strong winds can push levels higher than predicted &mdash; verify
-            before crossing.
+            tide height of <strong>{FLOOD_THRESHOLD_FT} feet</strong>. These
+            times are estimates only &mdash; actual conditions can vary with
+            weather, wind, storms, and other factors, so verify before crossing.
           </p>
         </div>
       </header>
