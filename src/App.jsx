@@ -87,8 +87,10 @@ export default function App() {
           <h1>Lieutenant Island</h1>
           <p className="eyebrow">Road Flooding Forecast</p>
           <p className="subtitle">
-            In South Wellfleet, Massachusetts. The road to the island floods
-            when the tide rises above <strong>{FLOOD_THRESHOLD_FT} feet</strong>.
+            South Wellfleet, Massachusetts. Road flooding is estimated using a
+            tide height of <strong>{FLOOD_THRESHOLD_FT} feet</strong>. Storms and
+            strong winds can push levels higher than predicted &mdash; verify
+            before crossing.
           </p>
         </div>
       </header>
@@ -148,10 +150,6 @@ export default function App() {
           >
             Source
           </a>
-        </p>
-        <p className="footer-note">
-          Predicted tides only &mdash; storms and strong winds can raise levels.
-          Verify before crossing.
         </p>
       </footer>
 
