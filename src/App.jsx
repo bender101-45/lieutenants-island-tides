@@ -4,6 +4,7 @@ import {
   FLOOD_THRESHOLD_FT,
   fetchTidePredictions,
   computeDailyClosures,
+  getCurrentStatus,
   generateICS,
   formatTime,
   formatDuration,
@@ -27,6 +28,13 @@ export default function App() {
   const [calendarClosures, setCalendarClosures] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(() => new Date());
+
+  // Keep the "right now" status and countdown fresh
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -101,6 +109,11 @@ export default function App() {
 
         {displayClosures && (
           <>
+            <StatusBanner
+              status={getCurrentStatus(calendarClosures, now)}
+              now={now}
+            />
+
             <div className="days">
               {displayClosures.map(({ date, windows, extremes }, i) => (
                 <DayCard
@@ -138,11 +151,35 @@ export default function App() {
           </a>
         </p>
         <p className="footer-note">
-          A reconstructed forecast &mdash; verify conditions before crossing.
+          Predicted tides only &mdash; storms and strong winds can raise levels.
+          Verify before crossing.
         </p>
       </footer>
 
       <Analytics />
+    </div>
+  );
+}
+
+function StatusBanner({ status, now }) {
+  const { covered, nextChange } = status;
+  const countdown = nextChange ? formatDuration(now, nextChange) : null;
+
+  return (
+    <div className={`status-banner ${covered ? "is-covered" : "is-open"}`}>
+      <span className="status-dot" aria-hidden="true" />
+      <div className="status-content">
+        <span className="status-headline">
+          {covered ? "Road is covered now" : "Road is open now"}
+        </span>
+        {countdown && (
+          <span className="status-detail">
+            {covered ? "Clears in" : "Next closure in"} {countdown}
+            {" · "}
+            {formatTime(nextChange)}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

@@ -136,6 +136,27 @@ export function computeDailyClosures(extremes, startDate, numDays) {
   return results;
 }
 
+// ─── Current road status ─────────────────────────────────────────────────────
+// Given the computed daily closures and the current time, determine whether the
+// road is covered right now and when that status next changes.
+// Returns { covered: boolean, nextChange: Date | null }
+export function getCurrentStatus(dailyClosures, now = new Date()) {
+  const windows = dailyClosures
+    .flatMap((d) => d.windows)
+    .sort((a, b) => a.start - b.start);
+
+  // Currently inside a closure window?
+  for (const w of windows) {
+    if (now >= w.start && now < w.end) {
+      return { covered: true, nextChange: w.end };
+    }
+  }
+
+  // Otherwise open — find the next closure start after now
+  const next = windows.find((w) => w.start > now);
+  return { covered: false, nextChange: next ? next.start : null };
+}
+
 // ─── Formatting helpers ───────────────────────────────────────────────────────
 export function formatTime(date) {
   return date.toLocaleTimeString("en-US", {

@@ -108,6 +108,71 @@ body {
   border-radius: 10px;
 }
 
+/* ── Status banner (right now) ── */
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.9rem 1.05rem;
+  border-radius: 12px;
+  margin-bottom: 1.1rem;
+  border: 1px solid;
+}
+
+.status-banner.is-open {
+  background: #eef5f0;
+  border-color: #cfe3d7;
+}
+
+.status-banner.is-covered {
+  background: var(--alert-soft);
+  border-color: #e3c3ad;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.is-open .status-dot {
+  background: var(--ok);
+  box-shadow: 0 0 0 4px rgba(74, 122, 94, 0.18);
+}
+
+.is-covered .status-dot {
+  background: var(--alert);
+  box-shadow: 0 0 0 4px rgba(168, 84, 43, 0.18);
+}
+
+.status-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.status-headline {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.1rem;
+  line-height: 1.15;
+}
+
+.is-open .status-headline {
+  color: #2f5a44;
+}
+
+.is-covered .status-headline {
+  color: var(--alert);
+}
+
+.status-detail {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Days ── */
 .days {
   display: flex;
