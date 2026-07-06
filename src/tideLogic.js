@@ -212,10 +212,10 @@ export function generateICS(dailyClosures) {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Lieutenants Island Tides//EN",
+    "PRODID:-//Lieutenant Island Tides//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
-    "X-WR-CALNAME:Lieutenants Island Road",
+    "X-WR-CALNAME:Lieutenant Island Road",
     "X-WR-TIMEZONE:America/New_York",
   ];
 
@@ -229,7 +229,7 @@ export function generateICS(dailyClosures) {
         `UID:${uid()}@lt-island-tides`,
         `DTSTART;TZID=America/New_York:${toICSDate(w.start)}`,
         `DTEND;TZID=America/New_York:${toICSDate(w.end)}`,
-        "SUMMARY:🌊 Lieutenants Island Road Covered",
+        "SUMMARY:🌊 Lieutenant Island Road Covered",
         `DESCRIPTION:Road impassable ${formatTime(w.start)} – ${formatTime(w.end)} (${formatDuration(w.start, w.end)})`,
         "BEGIN:VALARM",
         "TRIGGER:-PT1H",

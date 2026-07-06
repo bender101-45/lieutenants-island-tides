@@ -84,12 +84,11 @@ export default function App() {
       <header className="app-header">
         <div className="header-inner">
           <WaveMark />
-          <h1>Lieutenants Island</h1>
+          <h1>Lieutenant Island</h1>
           <p className="eyebrow">Road Flooding Forecast</p>
           <p className="subtitle">
-            South Wellfleet, Massachusetts. The causeway floods when the tide
-            reaches <strong>{FLOOD_THRESHOLD_FT} ft</strong> above MLLW at
-            Wellfleet Harbor.
+            In South Wellfleet, Massachusetts. The road to the island floods
+            when the tide rises above <strong>{FLOOD_THRESHOLD_FT} feet</strong>.
           </p>
         </div>
       </header>
