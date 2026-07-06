@@ -84,7 +84,7 @@ export default function App() {
       <header className="app-header">
         <div className="header-inner">
           <WaveMark />
-          <h1>Lieutenant Island</h1>
+          <h1>Lieutenants Island</h1>
           <p className="eyebrow">Road Flooding Forecast</p>
           <p className="subtitle">
             South Wellfleet, Massachusetts. Road flooding is estimated using a
