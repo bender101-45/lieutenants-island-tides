@@ -29,6 +29,7 @@ export default function App() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => new Date());
+  const [copied, setCopied] = useState(false);
 
   // Keep the "right now" status and countdown fresh
   useEffect(() => {
@@ -66,6 +67,33 @@ export default function App() {
     }
     load();
   }, []);
+
+  async function shareApp() {
+    const url = window.location.href;
+    const blurb =
+      "Check when the road to Lieutenants Island floods each day. " +
+      "Free, and works right on your phone.";
+    const shareData = {
+      title: "Lieutenants Island Road Flooding",
+      text: blurb,
+      url,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch {
+        // user cancelled the share sheet — nothing to do
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${blurb}\n${url}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        // clipboard unavailable — nothing to do
+      }
+    }
+  }
 
   function downloadCalendar() {
     if (!calendarClosures) return;
@@ -129,6 +157,9 @@ export default function App() {
             <div className="export-section">
               <button className="export-btn" onClick={downloadCalendar}>
                 Add to Apple Calendar
+              </button>
+              <button className="share-btn" onClick={shareApp}>
+                {copied ? "Link copied ✓" : "Share this app"}
               </button>
               <p className="export-hint">
                 Downloads the next 30 days of closures, with a reminder one hour

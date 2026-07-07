@@ -349,6 +349,28 @@ body {
   background: #17596a;
 }
 
+.share-btn {
+  margin-top: 0.55rem;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 0.8rem 1.5rem;
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.share-btn:hover,
+.share-btn:active {
+  background: var(--accent);
+  color: #fff;
+}
+
 .export-hint {
   margin-top: 0.65rem;
   font-size: 0.78rem;
