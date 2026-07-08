@@ -4,6 +4,7 @@ import {
   FLOOD_THRESHOLD_FT,
   fetchTidePredictions,
   computeDailyClosures,
+  getDayCurve,
   getCurrentStatus,
   generateICS,
   formatTime,
@@ -26,6 +27,7 @@ function toNoaaDate(date) {
 export default function App() {
   const [displayClosures, setDisplayClosures] = useState(null);
   const [calendarClosures, setCalendarClosures] = useState(null);
+  const [todayCurve, setTodayCurve] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => new Date());
@@ -57,8 +59,13 @@ export default function App() {
         const display = computeDailyClosures(extremes, today, DISPLAY_DAYS);
         const calendar = computeDailyClosures(extremes, today, CALENDAR_DAYS);
 
+        const todayEnd = new Date(today);
+        todayEnd.setHours(23, 59, 59, 999);
+        const curve = getDayCurve(extremes, today, todayEnd);
+
         setDisplayClosures(display);
         setCalendarClosures(calendar);
+        setTodayCurve(curve);
       } catch (e) {
         setError(e.message);
       } finally {
@@ -150,6 +157,8 @@ export default function App() {
                   windows={windows}
                   extremes={extremes}
                   isToday={i === 0}
+                  curve={i === 0 ? todayCurve : null}
+                  now={now}
                 />
               ))}
             </div>
@@ -236,7 +245,143 @@ function WaveMark() {
   );
 }
 
-function DayCard({ date, windows, extremes, isToday }) {
+function TideGraph({ curve, now }) {
+  const W = 340;
+  const H = 130;
+  const x0 = 0;
+  const x1 = W;
+  const y0 = 16;
+  const y1 = H - 18;
+
+  const dayStart = new Date(curve[0].t);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayMs = 24 * 3600 * 1000;
+
+  const heights = curve.map((p) => p.h);
+  const loH = Math.min(...heights, FLOOD_THRESHOLD_FT) - 0.4;
+  const hiH = Math.max(...heights, FLOOD_THRESHOLD_FT) + 0.4;
+
+  const sx = (t) => x0 + ((t - dayStart.getTime()) / dayMs) * (x1 - x0);
+  const sy = (h) => y1 - ((h - loH) / (hiH - loH)) * (y1 - y0);
+
+  const pts = curve.map(
+    (p) => `${sx(p.t.getTime()).toFixed(1)},${sy(p.h).toFixed(1)}`
+  );
+  const linePath = "M" + pts.join(" L");
+  const areaPath =
+    `M${sx(curve[0].t.getTime()).toFixed(1)},${y1} L` +
+    pts.join(" L") +
+    ` L${sx(curve[curve.length - 1].t.getTime()).toFixed(1)},${y1} Z`;
+
+  const yThresh = sy(FLOOD_THRESHOLD_FT);
+  const nowT = now.getTime();
+  const showNow = nowT >= dayStart.getTime() && nowT <= dayStart.getTime() + dayMs;
+  const nowX = sx(nowT);
+
+  // current tide height (nearest sample) for the marker dot
+  let nowH = null;
+  if (showNow) {
+    let best = curve[0];
+    let bestDiff = Infinity;
+    for (const p of curve) {
+      const d = Math.abs(p.t.getTime() - nowT);
+      if (d < bestDiff) {
+        bestDiff = d;
+        best = p;
+      }
+    }
+    nowH = best.h;
+  }
+
+  // gentle animated surface ripples (drift horizontally within the water)
+  const wl = 48;
+  const wave = (yy, amp) => {
+    const p = [];
+    for (let x = -W; x <= 2 * W; x += 6) {
+      p.push(`${x},${(yy + amp * Math.sin((x / wl) * 2 * Math.PI)).toFixed(1)}`);
+    }
+    return "M" + p.join(" L");
+  };
+  const r1 = y0 + (y1 - y0) * 0.42;
+  const r2 = y0 + (y1 - y0) * 0.62;
+
+  const ticks = [0, 6, 12, 18, 24].map((h) => ({
+    x: sx(dayStart.getTime() + h * 3600 * 1000),
+    label:
+      h === 0 || h === 24 ? "12a" : h === 12 ? "12p" : h < 12 ? `${h}a` : `${h - 12}p`,
+  }));
+
+  return (
+    <svg
+      className="tide-graph"
+      viewBox={`0 0 ${W} ${H}`}
+      role="img"
+      aria-label="Tide height across today with the road-flooding level marked"
+    >
+      <defs>
+        <clipPath id="underCurve">
+          <path d={areaPath} />
+        </clipPath>
+        <linearGradient id="waterFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#8fc6d6" />
+          <stop offset="1" stopColor="#dceef2" />
+        </linearGradient>
+      </defs>
+
+      <g clipPath="url(#underCurve)">
+        {/* water body */}
+        <rect x={x0} y={y0} width={x1 - x0} height={y1 - y0} fill="url(#waterFill)" />
+        {/* covered zone above the flood line */}
+        <rect x={x0} y={y0} width={x1 - x0} height={yThresh - y0}
+              fill="#c9663a" opacity="0.38" />
+        {/* drifting ripples */}
+        <path className="tg-ripple tg-ripple-a" d={wave(r1, 2.4)}
+              fill="none" stroke="#ffffff" strokeWidth="1.4" opacity="0.5" />
+        <path className="tg-ripple tg-ripple-b" d={wave(r2, 1.8)}
+              fill="none" stroke="#ffffff" strokeWidth="1.2" opacity="0.35" />
+      </g>
+
+      {/* soft flood line */}
+      <line x1={x0} y1={yThresh} x2={x1} y2={yThresh}
+            stroke="#b8552b" strokeWidth="1" strokeDasharray="2 4" opacity="0.7" />
+      <text x={x1 - 3} y={yThresh - 4} textAnchor="end" className="tg-thresh">
+        flood level
+      </text>
+
+      {/* tide curve */}
+      <path d={linePath} fill="none" stroke="#12707f" strokeWidth="2.4"
+            strokeLinejoin="round" strokeLinecap="round" />
+
+      {/* now marker */}
+      {showNow && (
+        <>
+          <circle className="tg-nowpulse" cx={nowX} cy={sy(nowH)} r="4"
+                  fill="#12707f" opacity="0.4" />
+          <circle cx={nowX} cy={sy(nowH)} r="4"
+                  fill="#0f2e38" stroke="#fff" strokeWidth="1.8" />
+          <text x={nowX} y={y0 - 4} textAnchor="middle" className="tg-now">
+            now
+          </text>
+        </>
+      )}
+
+      {/* time axis */}
+      {ticks.map((t, i) => (
+        <text
+          key={i}
+          x={t.x + (i === 0 ? 2 : i === ticks.length - 1 ? -2 : 0)}
+          y={H - 4}
+          textAnchor={i === 0 ? "start" : i === ticks.length - 1 ? "end" : "middle"}
+          className="tg-x"
+        >
+          {t.label}
+        </text>
+      ))}
+    </svg>
+  );
+}
+
+function DayCard({ date, windows, extremes, isToday, curve, now }) {
   const closed = windows.length > 0;
   return (
     <div className={`day-card${isToday ? " today" : ""}`}>
@@ -253,6 +398,8 @@ function DayCard({ date, windows, extremes, isToday }) {
             : "Open"}
         </span>
       </div>
+
+      {curve && curve.length > 0 && <TideGraph curve={curve} now={now} />}
 
       {!closed ? (
         <div className="no-closure">No road flooding expected</div>

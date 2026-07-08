@@ -136,6 +136,34 @@ export function computeDailyClosures(extremes, startDate, numDays) {
   return results;
 }
 
+// ─── Smooth curve points for plotting a single day ──────────────────────────
+// Returns [{ t: Date, h: number }] sampled across the day for a tide graph.
+export function getDayCurve(extremes, dayStart, dayEnd, stepMin = 8) {
+  const pts = [];
+  const stepMs = stepMin * 60 * 1000;
+  for (let t = dayStart.getTime(); t <= dayEnd.getTime(); t += stepMs) {
+    let iLeft = -1;
+    for (let i = 0; i < extremes.length - 1; i++) {
+      if (extremes[i].t.getTime() <= t && extremes[i + 1].t.getTime() >= t) {
+        iLeft = i;
+        break;
+      }
+    }
+    if (iLeft === -1) continue;
+    const left = extremes[iLeft];
+    const right = extremes[iLeft + 1];
+    const h = interpolateHeight(
+      left.v,
+      left.t.getTime(),
+      right.v,
+      right.t.getTime(),
+      t
+    );
+    pts.push({ t: new Date(t), h });
+  }
+  return pts;
+}
+
 // ─── Current road status ─────────────────────────────────────────────────────
 // Given the computed daily closures and the current time, determine whether the
 // road is covered right now and when that status next changes.

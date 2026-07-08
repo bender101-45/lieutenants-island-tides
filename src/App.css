@@ -285,6 +285,70 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Tide graph (today) ── */
+.tide-graph {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0.15rem 0 0.75rem;
+}
+
+.tg-x,
+.tg-thresh,
+.tg-now {
+  font-family: var(--sans);
+  font-size: 8px;
+  fill: var(--ink-soft);
+}
+
+.tg-thresh {
+  fill: #a8542b;
+  font-weight: 600;
+}
+
+.tg-now {
+  fill: var(--ink);
+  font-weight: 600;
+}
+
+/* drifting surface ripples */
+.tg-ripple-a {
+  animation: tg-drift 5s linear infinite;
+}
+.tg-ripple-b {
+  animation: tg-drift 8s linear infinite;
+}
+@keyframes tg-drift {
+  to {
+    transform: translateX(48px);
+  }
+}
+
+/* pulsing "now" marker */
+.tg-nowpulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tg-pulse 2.6s ease-out infinite;
+}
+@keyframes tg-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  100% {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tg-ripple-a,
+  .tg-ripple-b,
+  .tg-nowpulse {
+    animation: none;
+  }
+}
+
 /* ── Tides (high/low table) ── */
 .tides {
   margin-top: 0.85rem;
