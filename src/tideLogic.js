@@ -2,8 +2,14 @@
 export const FLOOD_THRESHOLD_FT = 9.6;
 const STATION_ID = "8446613";
 const SAMPLE_INTERVAL_MIN = 2;
+const FETCH_ATTEMPTS = 4;
+const CACHE_KEY = "lt-island-tides-cache-v1";
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ─── NOAA fetch ──────────────────────────────────────────────────────────────
+// Retries a few times because NOAA's API is intermittently flaky (504s), and
+// caches the last good result so an outage doesn't leave users with nothing.
 export async function fetchTidePredictions(beginDate, endDate) {
   const params = new URLSearchParams({
     product: "predictions",
@@ -17,15 +23,61 @@ export async function fetchTidePredictions(beginDate, endDate) {
     end_date: endDate,
   });
   const url = `https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?${params}`;
-  const res = await fetch(url);
-  const json = await res.json();
-  if (json.error) throw new Error(json.error.message || "NOAA API error");
-  // Parse predictions into { t: Date, v: number, type: "H"|"L" }
-  return json.predictions.map((p) => ({
-    t: parseLocalTime(p.t),
-    v: parseFloat(p.v),
-    type: p.type,
-  }));
+
+  let lastError;
+  for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch(url);
+      const text = await res.text();
+
+      // A 504/500 returns an HTML error page, not JSON — treat as retryable.
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error("NOAA service temporarily unavailable");
+      }
+      if (json.error) {
+        throw new Error(json.error.message || "NOAA API error");
+      }
+      if (!Array.isArray(json.predictions)) {
+        throw new Error("No predictions returned");
+      }
+
+      // Cache the raw predictions for offline / outage fallback.
+      try {
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({ savedAt: Date.now(), predictions: json.predictions })
+        );
+      } catch {
+        // storage full or unavailable — non-fatal
+      }
+
+      return json.predictions.map(parsePrediction);
+    } catch (e) {
+      lastError = e;
+      if (attempt < FETCH_ATTEMPTS) await sleep(attempt * 700);
+    }
+  }
+  throw lastError;
+}
+
+// Last successfully-fetched forecast saved on this device, or null.
+export function loadCachedPredictions() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { savedAt, predictions } = JSON.parse(raw);
+    if (!Array.isArray(predictions)) return null;
+    return { extremes: predictions.map(parsePrediction), savedAt: new Date(savedAt) };
+  } catch {
+    return null;
+  }
+}
+
+function parsePrediction(p) {
+  return { t: parseLocalTime(p.t), v: parseFloat(p.v), type: p.type };
 }
 
 // Parse "2026-06-09 19:02" as a local Date (no UTC conversion)

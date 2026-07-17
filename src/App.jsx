@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import {
   FLOOD_THRESHOLD_FT,
   fetchTidePredictions,
+  loadCachedPredictions,
   computeDailyClosures,
   getDayCurve,
   getCurrentStatus,
@@ -24,11 +25,22 @@ function toNoaaDate(date) {
   return `${y}${m}${d}`;
 }
 
+function formatStale(date) {
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 export default function App() {
   const [displayClosures, setDisplayClosures] = useState(null);
   const [calendarClosures, setCalendarClosures] = useState(null);
   const [todayCurve, setTodayCurve] = useState(null);
   const [error, setError] = useState(null);
+  const [staleSince, setStaleSince] = useState(null);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => new Date());
   const [copied, setCopied] = useState(false);
@@ -39,41 +51,52 @@ export default function App() {
     return () => clearInterval(id);
   }, []);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-        // Fetch 32 days with 1-day buffer on each end for interpolation edges
-        const begin = new Date(today);
-        begin.setDate(today.getDate() - 1);
-        const end = new Date(today);
-        end.setDate(today.getDate() + CALENDAR_DAYS + 1);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(today);
+    todayEnd.setHours(23, 59, 59, 999);
 
-        const extremes = await fetchTidePredictions(
-          toNoaaDate(begin),
-          toNoaaDate(end)
-        );
+    // Turn a set of extremes into the view models the UI needs.
+    const build = (extremes) => {
+      setDisplayClosures(computeDailyClosures(extremes, today, DISPLAY_DAYS));
+      setCalendarClosures(computeDailyClosures(extremes, today, CALENDAR_DAYS));
+      setTodayCurve(getDayCurve(extremes, today, todayEnd));
+    };
 
-        const display = computeDailyClosures(extremes, today, DISPLAY_DAYS);
-        const calendar = computeDailyClosures(extremes, today, CALENDAR_DAYS);
+    try {
+      // Fetch 32 days with 1-day buffer on each end for interpolation edges
+      const begin = new Date(today);
+      begin.setDate(today.getDate() - 1);
+      const end = new Date(today);
+      end.setDate(today.getDate() + CALENDAR_DAYS + 1);
 
-        const todayEnd = new Date(today);
-        todayEnd.setHours(23, 59, 59, 999);
-        const curve = getDayCurve(extremes, today, todayEnd);
-
-        setDisplayClosures(display);
-        setCalendarClosures(calendar);
-        setTodayCurve(curve);
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
+      const extremes = await fetchTidePredictions(
+        toNoaaDate(begin),
+        toNoaaDate(end)
+      );
+      build(extremes);
+      setStaleSince(null);
+    } catch {
+      // NOAA is down — fall back to the last good forecast on this device.
+      const cached = loadCachedPredictions();
+      if (cached) {
+        build(cached.extremes);
+        setStaleSince(cached.savedAt);
+      } else {
+        setError("NOAA's tide service is temporarily unavailable.");
       }
+    } finally {
+      setLoading(false);
     }
-    load();
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   async function shareApp() {
     const url = window.location.href;
@@ -136,9 +159,21 @@ export default function App() {
 
         {error && (
           <div className="status-msg error">
-            <strong>Could not load tide data.</strong>
-            <br />
-            {error}
+            <strong>{error}</strong>
+            <p className="error-sub">
+              This is a problem on NOAA's end, not the app. Please try again in a
+              little while.
+            </p>
+            <button className="retry-btn" onClick={load}>
+              Try again
+            </button>
+          </div>
+        )}
+
+        {staleSince && !loading && (
+          <div className="stale-banner">
+            Showing your last saved forecast from {formatStale(staleSince)}.
+            NOAA's live data is temporarily unavailable.
           </div>
         )}
 
