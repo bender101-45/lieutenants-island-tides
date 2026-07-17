@@ -22,45 +22,52 @@ export async function fetchTidePredictions(beginDate, endDate) {
     begin_date: beginDate, // "yyyymmdd"
     end_date: endDate,
   });
-  const url = `https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?${params}`;
+  // Prefer our own serverless proxy (server-side cached, outage-resilient).
+  // Fall back to calling NOAA directly — this keeps `vite dev` working locally,
+  // where the proxy isn't running, and covers the proxy being unreachable.
+  const proxyUrl = `/api/tides?begin_date=${beginDate}&end_date=${endDate}`;
+  const noaaUrl = `https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?${params}`;
 
   let lastError;
-  for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt++) {
-    try {
-      const res = await fetch(url);
-      const text = await res.text();
-
-      // A 504/500 returns an HTML error page, not JSON — treat as retryable.
-      let json;
+  for (const source of [proxyUrl, noaaUrl]) {
+    for (let attempt = 1; attempt <= FETCH_ATTEMPTS; attempt++) {
       try {
-        json = JSON.parse(text);
-      } catch {
-        throw new Error("NOAA service temporarily unavailable");
-      }
-      if (json.error) {
-        throw new Error(json.error.message || "NOAA API error");
-      }
-      if (!Array.isArray(json.predictions)) {
-        throw new Error("No predictions returned");
-      }
+        const predictions = await fetchPredictions(source);
 
-      // Cache the raw predictions for offline / outage fallback.
-      try {
-        localStorage.setItem(
-          CACHE_KEY,
-          JSON.stringify({ savedAt: Date.now(), predictions: json.predictions })
-        );
-      } catch {
-        // storage full or unavailable — non-fatal
-      }
+        // Cache the raw predictions for per-device offline fallback.
+        try {
+          localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({ savedAt: Date.now(), predictions })
+          );
+        } catch {
+          // storage full or unavailable — non-fatal
+        }
 
-      return json.predictions.map(parsePrediction);
-    } catch (e) {
-      lastError = e;
-      if (attempt < FETCH_ATTEMPTS) await sleep(attempt * 700);
+        return predictions.map(parsePrediction);
+      } catch (e) {
+        lastError = e;
+        if (attempt < FETCH_ATTEMPTS) await sleep(attempt * 600);
+      }
     }
   }
   throw lastError;
+}
+
+async function fetchPredictions(url) {
+  const res = await fetch(url);
+  const text = await res.text();
+
+  // A 504/500 (or Vite's dev HTML for /api) isn't JSON — treat as retryable.
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error("Tide service temporarily unavailable");
+  }
+  if (json.error) throw new Error(json.error.message || "Tide API error");
+  if (!Array.isArray(json.predictions)) throw new Error("No predictions returned");
+  return json.predictions;
 }
 
 // Last successfully-fetched forecast saved on this device, or null.
